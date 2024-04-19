@@ -45,7 +45,8 @@ class DatabaseHelper {
 
   Future<List<Todo>> searchTodo(String keyword) async {
     var dbClient = await db;
-    var todos = await dbClient.query('todos', where: 'nama like ?', whereArgs: ['%$keyword%']);
+    var todos = await dbClient
+        .query('todos', where: 'nama like ?', whereArgs: ['%$keyword%']);
     return todos.map((todo) => Todo.fromMap(todo)).toList();
   }
 
@@ -67,4 +68,3 @@ class DatabaseHelper {
     return await dbClient.delete('todos', where: "id = ?", whereArgs: [id]);
   }
 }
-

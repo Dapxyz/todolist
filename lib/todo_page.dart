@@ -1,72 +1,7 @@
 import 'package:flutter/material.dart';
 
-class Todo {
-  final int? id;
-  final String nama;
-  final String deskripsi;
-  bool done;
-
-  Todo({
-    this.id,
-    required this.nama,
-    required this.deskripsi,
-    this.done = false,
-  });
-
-  static List<Todo> dummyData = [
-    Todo(
-      nama: "Belajar Flutter",
-      deskripsi: "Belajar membuat aplikasi Flutter",
-    ),
-    Todo(
-      nama: "Belajar Dart",
-      deskripsi: "Belajar bahasa pemrograman Dart",
-    ),
-  ];
-
-  Todo copyWith({required bool done}) {
-    return Todo(
-      id: id,
-      nama: nama,
-      deskripsi: deskripsi,
-      done: done,
-    );
-  }
-}
-
-abstract class DbHelper {
-  Future<List<Todo>> getAllTodos();
-
-  Future<void> addTodo(Todo todo);
-
-  Future<void> updateTodo(Todo updatedTodo);
-
-  Future<void> deleteTodo(int id);
-}
-
-class DatabaseHelper implements DbHelper {
-  @override
-  Future<List<Todo>> getAllTodos() async {
-    // Implementasi untuk mengambil semua Todo dari database
-    // Misalnya, dari SQLite database atau API
-    return []; // Mengembalikan daftar kosong untuk sekarang
-  }
-
-  @override
-  Future<void> addTodo(Todo todo) async {
-    // Implementasi untuk menambahkan Todo ke database
-  }
-
-  @override
-  Future<void> updateTodo(Todo updatedTodo) async {
-    // Implementasi untuk memperbarui Todo di database
-  }
-
-  @override
-  Future<void> deleteTodo(int id) async {
-    // Implementasi untuk menghapus Todo dari database
-  }
-}
+import 'database_helper.dart';
+import 'todo.dart';
 
 class Todopage extends StatelessWidget {
   const Todopage({super.key});
@@ -74,13 +9,14 @@ class Todopage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: TodoList(dbHelper: DatabaseHelper()), // Membuat objek DatabaseHelper
+      home:
+          TodoList(dbHelper: DatabaseHelper()), // Membuat objek DatabaseHelper
     );
   }
 }
 
 class TodoList extends StatefulWidget {
-  final DbHelper dbHelper;
+  final DatabaseHelper dbHelper;
 
   const TodoList({super.key, required this.dbHelper});
 
@@ -93,12 +29,21 @@ class _TodoListState extends State<TodoList> {
   final TextEditingController _namaCtrl = TextEditingController();
   final TextEditingController _deskripsiCtrl = TextEditingController();
   final TextEditingController _searchCtrl = TextEditingController();
-  late List<Todo> todoList;
+  List<Todo> todoList = [];
 
   @override
   void initState() {
     super.initState();
-    todoList = [];
+
+    // Future.delayed(const Duration(seconds: 3), () {
+    //   // pindah halaman.
+    // });
+    // todoList = [];
+    widget.dbHelper.getAllTodos().then((e) {
+      setState(() {
+        todoList = e;
+      });
+    });
     refreshList();
   }
 
@@ -110,25 +55,24 @@ class _TodoListState extends State<TodoList> {
   }
 
   Future<void> addTodo() async {
-  await widget.dbHelper.addTodo(Todo(
-    nama: _namaCtrl.text,
-    deskripsi: _deskripsiCtrl.text,
-  ));
-  
-  // Perbarui daftar todoList dengan mengambil ulang data dari database
-  await refreshList();
-  
-  // Bersihkan teks pada TextField setelah menambahkan todo
-  setState(() {
-    _namaCtrl.text = '';
-    _deskripsiCtrl.text = '';
-  });
-}
+    await widget.dbHelper.addTodo(Todo(
+      _namaCtrl.text,
+      _deskripsiCtrl.text,
+    ));
 
+    // Perbarui daftar todoList dengan mengambil ulang data dari database
+    await refreshList();
+
+    // Bersihkan teks pada TextField setelah menambahkan todo
+    setState(() {
+      _namaCtrl.text = '';
+      _deskripsiCtrl.text = '';
+    });
+  }
 
   Future<void> update(int index, bool done) async {
-    final updatedTodo = todoList[index].copyWith(done: done);
-    await widget.dbHelper.updateTodo(updatedTodo);
+    // final updatedTodo = todoList[index].copyWith(done: done);
+    // await widget.dbHelper.updateTodo(updatedTodo);
     refreshList();
   }
 
@@ -257,8 +201,4 @@ class _TodoListState extends State<TodoList> {
       todoList = todos;
     });
   }
-}
-
-void main() {
-  runApp(const Todopage());
 }
